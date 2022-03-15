@@ -1,0 +1,233 @@
+# vim:ft=bash
+set correct                                                  # Auto correct mistakes
+set extendedglob        # Extended globbing. Allows using regular expressions with *
+set nocaseglob                                           # Case insensitive globbing
+set rcexpandparam                                  # Array expension with parameters
+set nocheckjobs                    # Don't warn about running processes when exiting
+set numericglobsort                 # Sort filenames numerically when it makes sense
+set nobeep                                                   
+set appendhistory                # Immediately append history instead of overwriting
+set histignorealldups        # If a new command is a duplicate, remove the older one
+set autocd                             # if only directory path is entered, cd there
+set HIST_IGNORE_SPACE
+
+set -o vi
+
+HISTFILE=~/.bash_history
+HISTSIZE=1000
+SAVEHIST=500
+
+# Seleccionar editor para editar linea de comandos con C-e
+export EDITOR=vim
+export VISUAL=vim
+
+WORDCHARS=${WORDCHARS//\/[&.;]}   # Don't consider certain characters part of the word
+
+# ALIAS
+alias sudo='command sudo ' # Recomended in https://wiki.archlinux.org/title/Sudo#Tips_and_tricks
+alias grep='command grep --color=auto'
+alias egrep='command egrep --color=auto'
+alias fgrep='command fgrep --color=auto'
+alias pk='command pkill'
+alias v='command vim'
+alias blk='command lsblk --output name,label,path,size,mountpoint,fstype'
+alias jctl='command journalctl -p 3 -xb'
+alias please='command sudo bash -c "$(fc -ln -1)"'
+alias pls='command sudo bash -c "$(fc -ln -1)"'
+alias pager='command cbash -c "$(fc -ln -1)" | less'
+alias pg='command bash -c "$(fc -ln -1)" | less'
+alias cp="command cp --interactive"  # Confirm before overwriting something
+alias df='command df --human-readable'
+alias du='command du -h'
+alias du1='command du --human-readable --max-depth=1 --all | sort -hr 2> /dev/null | less'
+alias rm='command rm -I'  # Prevents epic mistakes
+alias free='command free -m'  # Show sizes in MB
+alias l='command ls'
+alias ls='command ls --color=always'
+alias la='command ls --color=always -a'
+alias ll='command ls --color=always -al'
+alias ex="command chmod +x"
+
+searchfile(){
+    # Search file name that contains that word
+  sudo find / -type f -iname "*$1*" 2> /dev/null
+}
+
+searchdir(){
+    # Search directory name that contains that word
+  sudo find / -type d -iname "*$1*" 2> /dev/null
+}
+
+searchname(){
+    # Search exact name of file or directory
+  sudo find / -iname "$1" 2> /dev/null
+}
+
+searchdir(){
+  sudo find / -type d -iname "*$1*" 2> /dev/null
+}
+
+
+randomdisk(){
+  # source https://www.linuxglobal.com/quickly-fill-a-disk-with-random-bits-without-dev-urandom/
+  password=$(sudo dd if=/dev/urandom bs=1 count=60)
+  blk_device="/dev/${1}"
+
+  lsblk --output name,label,path,size "${blk_device}"
+  echo "[ERASING PARTITIONS]"
+  sudo sgdisk --zap-all "${blk_device}" > /dev/null
+  echo "[DELETING FILESYSTEM]"
+  sudo wipefs --all --force "${blk_device}" > /dev/null
+
+  echo "[CREATING NEW PARTITION]"
+  sudo partprobe
+  sudo sgdisk --set-alignment 2048 --clear "${blk_device}" > /dev/null
+  sudo partprobe
+  sudo sgdisk --new 0:0:0 "${blk_device}" > /dev/null
+
+  echo "[ENCRYPTING PARTITION]"
+  blk_device_partition=$(lsblk -o path "${blk_device}" | grep --extended-regexp "${blk_device}"p\?1) 
+
+  sudo cryptsetup close random > /dev/null 2>&1
+  echo "$password" | sudo cryptsetup luksFormat "${blk_device_partition}" > /dev/null || exit
+  echo "$password" | sudo cryptsetup open --type luks "${blk_device_partition}" random > /dev/null || exit
+
+  echo "[FILLING PARTITIONS WITH ZERO'S]"
+  blk_device_size=$(sudo blockdev --getsz /dev/mapper/random) > /dev/null
+  sudo dd status=progress bs=8192 count=$((blk_device_size / 16)) if=/dev/zero of=/dev/mapper/random
+
+  echo "[ERASING LUKS HEADER]"
+  sudo cryptsetup close random > /dev/null
+  sudo cryptsetup --batch-mode erase "${blk_device_partition}" > /dev/null
+
+  echo "[CLEANING]"
+  sudo partprobe
+  sudo sgdisk --zap-all "${blk_device}" > /dev/null
+  sudo partprobe
+  sudo wipefs --all --force "${blk_device}" > /dev/null
+
+  unset password
+  unset blk_device
+  unset blk_device_size
+  unset blk_device_partition
+}
+
+
+t(){
+  tmux new-session \; \
+        split-window -h \; \
+        split-window -v \; \
+        new-window \; \
+        select-window -t 0 \; \
+        select-pane -t 0 \; \
+        attach
+}
+
+
+# Notepads
+# via https://github.com/melloc/dotfiles/blob/master/zsh/zshrc
+
+alias sp="command vim /tmp/scratchpad.md"
+
+
+searchstring() {
+  # $1 = String
+  # $2 = Location
+
+  grep --recursive --files-with-matches --word-regexp "${1}" "${2}"
+}
+
+#Tar
+ctar() {
+  file=$1
+  tarball="$1.tgz"
+  tar -zvcf "${tarball}" "${file}"
+
+  unset file
+  unset tarball
+}
+alias untar="command tar -zxvf" # Unpack tarball
+alias lstar="command tar -tvf" # List tarball files
+
+# Alias related with  enyryption
+# GPG
+# Asymetric encrption
+aenc() {
+  gpg --recipient "$2" --encrypt "$1"
+}
+
+# Armored Asymetric encryption
+aaenc() {
+  gpg --armor --recipient "$2" --encrypt "$1"
+}
+
+
+# Symetric encryption
+alias senc="gpg --symmetric --cipher-algo AES256"
+alias asenc="gpg --armor --symmetric --cipher-algo AES256"
+
+decrypt() {
+  input=$1
+  output=$(echo "$1" | sed 's/\.\(asc\|gpg\)//g')
+
+  realpath --canonicalize-existing "$1" &&\
+  gpg --output "${output}" --decrypt "${input}"
+
+  unset input
+  unset output
+}
+
+
+# TAR
+tardecrypt () {
+  input=$1
+  output=$(echo "$1" | sed 's/\.\(asc\|gpg\)//g')
+
+  realpath --canonicalize-existing "${input}" &&\
+  gpg --output "${output}" --decrypt "${input}" &&\
+  tar -zxvf "${output}" &&\
+  rm "${input}" "${output}"
+
+  unset input
+  unset output
+}
+
+# Encripted FS
+cryptfs() {
+  # Create an encripted fs
+  sudo cryptsetup -y -v luksFormat "$1" &&
+  sudo cryptsetup open "$1" crypt &&
+  sudo mkfs.ext4 /dev/mapper/crypt &&
+  sudo cryptsetup close crypt
+  
+}
+
+acryptmount() {
+  sudo mkdir -p /run/media/"$USER"/crypt &&
+  sudo cryptsetup open /dev/sda"$1" crypt &&
+  sudo mount /dev/mapper/crypt /run/media/"$USER"/crypt
+}
+
+bcryptmount() {
+  sudo mkdir -p /run/media/"$USER"/crypt &&
+  sudo cryptsetup open /dev/sdb"$1" crypt &&
+  sudo mount /dev/mapper/crypt /run/media/"$USER"/crypt
+}
+
+ccryptmount() {
+  sudo mkdir -p /run/media/"$USER"/crypt &&
+  sudo cryptsetup open /dev/sdc"$1" crypt &&
+  sudo mount /dev/mapper/crypt /run/media/"$USER"/crypt
+}
+
+cryptumount() {
+  sudo umount /run/media/"$USER"/crypt
+  sudo cryptsetup close crypt &&
+  sudo rmdir /run/media/"$USER"/crypt
+}
+
+c() {
+  cd "$@" && ls --color=always
+}
+
+PS1="%(!.%#.%{$fg[magenta]%}[%n@%m %1~]%{$reset_color%}$ "
