@@ -281,5 +281,14 @@ c() {
   cd "$@" && ls --color=always
 }
 
-PROMPT="%(!.%#.%{$fg[magenta]%}[%n@%m %1~]%{$reset_color%}$ "
+
+PS1="%B\
+%{$fg[white]%}[\
+%{$fg[white]%}%n\
+%{$fg[white]%}@\
+%{$fg[white]%}%M \
+%{$fg[white]%}%1~\
+%{$fg[white]%}]\
+%{$reset_color%}$\
+%b "
 
