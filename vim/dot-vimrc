@@ -1,4 +1,3 @@
-" This config should work on vim vanilla
 syntax on
 
 set tabstop=2 softtabstop=2
@@ -8,9 +7,7 @@ set expandtab
 set smartindent
 set nu
 set nowrap
-" set linebreak
 set breakindent
-" set smartcase
 set ignorecase
 set noswapfile
 set nobackup
@@ -19,97 +16,67 @@ set undofile
 set incsearch
 set conceallevel=2
 set textwidth=80
-" set foldmethod=indent
-"set clipboard+=unnamedplus "Always yank to Primary register
-"
-autocmd FileType markdown setlocal textwidth=80
-autocmd FileType markdown setlocal commentstring=//%s
-
-autocmd FileType org setlocal textwidth=80
-
-autocmd FileType arduino setlocal commentstring=//%s
+set nohlsearch
+set scrolloff=15
+set signcolumn=yes
+set colorcolumn=+1
+set termguicolors
+set updatetime=50
+set isfname+=@-@
+set splitright
 
 autocmd FileType python setlocal tabstop=4
 autocmd FileType python setlocal softtabstop=4
 autocmd FileType python setlocal shiftwidth=4
 
+let g:netrw_liststyle=3
 
 "==============================================================================
 "KEYBINDINGS
 "==============================================================================
+
 let mapleader=" "
-nnoremap <leader>fs :w<CR>| "Save file
-nnoremap X <c-v>
-nnoremap <leader>fS :w !sudo tee %<CR>| "Save file as sudo
+
 imap cg <Esc>| "Escape character
-imap <c>j <c>h| "Escape character
 vmap cg <Esc>| "Escape character
+
+nnoremap <leader>pv :Ex<CR>
+
+nnoremap <leader>fs :w<CR>| "Save file
+nnoremap <leader>fS :w !sudo tee %<CR>| "Save file as sudo
+nnoremap <leader>q :q<CR>
+nnoremap <leader>Q :confirm qall<CR>
+
 nnoremap y- yg_| "Yank from cursor position until last character
 nnoremap y_ ^yg_| "Yank from first to last character
-" Ctrl-j/k deletes blank line below/above, and Alt-j/k inserts.
-" nnoremap <silent><C-j> m`:silent +g/\m^\s*$/d<CR>``:noh<CR>
-" nnoremap <silent><C-k> m`:silent -g/\m^\s*$/d<CR>``:noh<CR>
-nnoremap <silent><A-j> :set paste<CR>m`o<Esc>``:set nopaste<CR>
-nnoremap <silent><A-k> :set paste<CR>m`O<Esc>``:set nopaste<CR>
-imap <C-BS> <C-w>
-nnoremap <leader>n :noh<CR>
 
-"Window Commands
-nnoremap <leader>Wv :rightbelow vnew<CR>| "New vertical window
-nnoremap <leader>Wh :rightbelow new<CR>| "New horizontal window
-nnoremap <leader>Wt :rightbelow new<CR>:resize 10<CR>:terminal<CR>:startinsert<CR>| "New terminal window
-nnoremap <leader>WT :rightbelow vnew<CR>:terminal<CR>:startinsert<CR>| "New terminal window
-nnoremap <leader>Wn :enew<CR>| "New window
-nnoremap <leader>Wd :hide<CR>| "Delete Window
-nnoremap <leader>wl :wincmd l<CR>| "Move cursor to right window
-nnoremap <leader>wh :wincmd h<CR>| "Move cursor to left window
-nnoremap <leader>wk :wincmd k<CR>| "Move cursor to above window
-nnoremap <leader>wj :wincmd j<CR>| "Move cursor to below window
-" nnoremap <leader>ww :wincmd p<CR>| "Move cursor to previous window
-nnoremap <C-Space> :wincmd p<CR>| "Move cursor to previous window
-nnoremap <leader>qq :confirm qall<CR>| "Close Vim
+" Move things while in visual mode
+vmap J :m '>+1<CR>gv=gv
+vmap K :m '<-2<CR>gv=gv
 
-"Buffer Commands
-nnoremap <leader><tab> :b!#<CR>| "Go to last edited buffer
-nnoremap <leader>bl :ls<CR>| "List buffers
-nnoremap <leader>bo :Buffer<CR>| "Open buffer
-nnoremap <leader>bd :bd<CR>| "Delete current buffer
-nnoremap <leader>bc :Bdelete hidden<CR>| "Delete all buffers except hidden
+" Keep cursor in the same place when pressing "J" in normal mode
+nnoremap J mzJ`z
 
-"Run Scripts
-" nnoremap <leader>rt :rightbelow split term:// %<CR>| "Run in terminal
-" nnoremap <leader>rt :rightbelow new<CR>:resize 10<CR>:terminal<CR>:startinsert<CR>| "New terminal window
-" nnoremap <leader>rt :rightbelow new term:// %<CR>:resize 10<CR>:startinsert<CR>| "New terminal window
-nnoremap <leader>ra :w<CR>:!%<CR>| "Run all
-
-"Copy Paste to/from clipboard
-"https://vi.stackexchange.com/questions/84/how-can-i-copy-text-to-the-system-clipboard-from-vim https://www.youtube.com/watch?v=E_rbfQqrm7g
-" vnoremap <C-c> "*y :let @+=@*<CR>| "Copy text to Primary and clipboard
-" nnoremap <C-V> "*p| "Paste text from primary register witch is accesed with middle mouse botton
-
-"File Explorer
-map <leader>ff :Vexplore<CR>:vertical resize 40<CR>
-
-"Terminal Keybindings
-tnoremap cg <C-\><C-n>
-nnoremap <leader>tp :wincmd j<CR>p :startinsert<CR>| "Paste line in teminal
-    
-"Stay cursor allways in the middle
-nnoremap k kzz
-nnoremap j jzz
-nnoremap p pzz
-nnoremap P Pzz
+" Keep cursor in the middle of the screen
+nnoremap <C-d> <C-d>zz
+nnoremap <C-u> <C-u>zz
+nnoremap n nzzzv
+nnoremap N Nzzzv
 nnoremap G Gzz
-nnoremap x xzz
-nnoremap <ENTER> <ENTER>zz
-inoremap <ENTER> <ENTER><ESC>zzi
-nnoremap H Hzz
 nnoremap M Mzz
-nnoremap L Lzz
-nnoremap { {zz
-nnoremap } }zz
-" this ones disables autoindent
-" nnoremap o o<ESC>zza
-" nnoremap O O<ESC>zza
-" nnoremap a a<ESC>zza
 
+" Paste over a word without losing it in register
+xmap <leader>p \"_dp
+
+" Yank to system register
+vmap <leader>y \"+y
+nnoremap <leader>y \"+y
+nnoremap <leader>Y \"+Y
+
+" Subtitute all matches over the cursor
+nnoremap <leader>s :%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<Left><Left><Left>
+
+" Go to last buffer
+nnoremap H :b#<CR>
+
+nnoremap X <c-v>
