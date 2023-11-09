@@ -29,7 +29,6 @@ alias grep='command grep --color=auto'
 alias egrep='command egrep --color=auto'
 alias fgrep='command fgrep --color=auto'
 alias pk='command pkill'
-alias v='command vim'
 alias blk='command lsblk --output name,label,path,size,mountpoint,fstype'
 alias jctl='command journalctl -p 3 -xb'
 alias please='command sudo bash -c "$(fc -ln -1)"'
@@ -48,94 +47,17 @@ alias la='command ls --color=always -a'
 alias ll='command ls --color=always -al'
 alias ex="command chmod +x"
 
-searchfile(){
-    # Search file name that contains that word
-  sudo find / -type f -iname "*$1*" 2> /dev/null
+v(){
+  if [[ -z "${1}" ]]; then
+    file=$(pwd)
+  else
+    file="${1}"
+  fi
+
+  vim "${file}" 
 }
-
-searchdir(){
-    # Search directory name that contains that word
-  sudo find / -type d -iname "*$1*" 2> /dev/null
-}
-
-searchname(){
-    # Search exact name of file or directory
-  sudo find / -iname "$1" 2> /dev/null
-}
-
-searchdir(){
-  sudo find / -type d -iname "*$1*" 2> /dev/null
-}
-
-
-randomdisk(){
-  # source https://www.linuxglobal.com/quickly-fill-a-disk-with-random-bits-without-dev-urandom/
-  password=$(sudo dd if=/dev/urandom bs=1 count=60)
-  blk_device="/dev/${1}"
-
-  lsblk --output name,label,path,size "${blk_device}"
-  echo "[ERASING PARTITIONS]"
-  sudo sgdisk --zap-all "${blk_device}" > /dev/null
-  echo "[DELETING FILESYSTEM]"
-  sudo wipefs --all --force "${blk_device}" > /dev/null
-
-  echo "[CREATING NEW PARTITION]"
-  sudo partprobe
-  sudo sgdisk --set-alignment 2048 --clear "${blk_device}" > /dev/null
-  sudo partprobe
-  sudo sgdisk --new 0:0:0 "${blk_device}" > /dev/null
-
-  echo "[ENCRYPTING PARTITION]"
-  blk_device_partition=$(lsblk -o path "${blk_device}" | grep --extended-regexp "${blk_device}"p\?1) 
-
-  sudo cryptsetup close random > /dev/null 2>&1
-  echo "$password" | sudo cryptsetup luksFormat "${blk_device_partition}" > /dev/null || exit
-  echo "$password" | sudo cryptsetup open --type luks "${blk_device_partition}" random > /dev/null || exit
-
-  echo "[FILLING PARTITIONS WITH ZERO'S]"
-  blk_device_size=$(sudo blockdev --getsz /dev/mapper/random) > /dev/null
-  sudo dd status=progress bs=8192 count=$((blk_device_size / 16)) if=/dev/zero of=/dev/mapper/random
-
-  echo "[ERASING LUKS HEADER]"
-  sudo cryptsetup close random > /dev/null
-  sudo cryptsetup --batch-mode erase "${blk_device_partition}" > /dev/null
-
-  echo "[CLEANING]"
-  sudo partprobe
-  sudo sgdisk --zap-all "${blk_device}" > /dev/null
-  sudo partprobe
-  sudo wipefs --all --force "${blk_device}" > /dev/null
-
-  unset password
-  unset blk_device
-  unset blk_device_size
-  unset blk_device_partition
-}
-
-
-t(){
-  tmux new-session \; \
-        split-window -h \; \
-        split-window -v \; \
-        new-window \; \
-        select-window -t 0 \; \
-        select-pane -t 0 \; \
-        attach
-}
-
-
-# Notepads
-# via https://github.com/melloc/dotfiles/blob/master/zsh/zshrc
 
 alias sp="command vim /tmp/scratchpad.md"
-
-
-searchstring() {
-  # $1 = String
-  # $2 = Location
-
-  grep --recursive --files-with-matches --word-regexp "${1}" "${2}"
-}
 
 #Tar
 ctar() {
@@ -177,57 +99,18 @@ decrypt() {
   unset output
 }
 
-
-# TAR
-tardecrypt () {
-  input=$1
-  output=$(echo "$1" | sed 's/\.\(asc\|gpg\)//g')
-
-  realpath --canonicalize-existing "${input}" &&\
-  gpg --output "${output}" --decrypt "${input}" &&\
-  tar -zxvf "${output}" &&\
-  rm "${input}" "${output}"
-
-  unset input
-  unset output
-}
-
-# Encripted FS
-cryptfs() {
-  # Create an encripted fs
-  sudo cryptsetup -y -v luksFormat "$1" &&
-  sudo cryptsetup open "$1" crypt &&
-  sudo mkfs.ext4 /dev/mapper/crypt &&
-  sudo cryptsetup close crypt
-  
-}
-
-acryptmount() {
-  sudo mkdir -p /run/media/"$USER"/crypt &&
-  sudo cryptsetup open /dev/sda"$1" crypt &&
-  sudo mount /dev/mapper/crypt /run/media/"$USER"/crypt
-}
-
-bcryptmount() {
-  sudo mkdir -p /run/media/"$USER"/crypt &&
-  sudo cryptsetup open /dev/sdb"$1" crypt &&
-  sudo mount /dev/mapper/crypt /run/media/"$USER"/crypt
-}
-
-ccryptmount() {
-  sudo mkdir -p /run/media/"$USER"/crypt &&
-  sudo cryptsetup open /dev/sdc"$1" crypt &&
-  sudo mount /dev/mapper/crypt /run/media/"$USER"/crypt
-}
-
-cryptumount() {
-  sudo umount /run/media/"$USER"/crypt
-  sudo cryptsetup close crypt &&
-  sudo rmdir /run/media/"$USER"/crypt
-}
-
 c() {
   cd "$@" && ls --color=always
 }
 
-PS1="%(!.%#.%{$fg[magenta]%}[%n@%m %1~]%{$reset_color%}$ "
+..() {
+  cd ..
+  ls --color=always
+}
+
+-() {
+  cd -
+  ls --color=always
+}
+
+PS1="\[\e[37m\][\u@\h \W]\$\[\e[0m\] "
