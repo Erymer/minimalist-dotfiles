@@ -20,7 +20,6 @@ set nohlsearch
 set scrolloff=15
 set signcolumn=yes
 set colorcolumn=+1
-set termguicolors
 set updatetime=50
 set isfname+=@-@
 set splitright
