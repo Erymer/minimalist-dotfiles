@@ -1,6 +1,7 @@
 # todo: Hacer uninstall de copy e install
 CURRENT_TOOLS := bash zsh tmux vim
 
+
 define copy_config_to_from
 	@if [ -e $(1) ]; then \
 		mv $(1) $(1).bak; \
@@ -14,6 +15,7 @@ define copy_config_to_from
 	fi
 endef
 
+
 define substitute_config_to_from
   @if [ -e $(1) ]; then \
 		echo "Deleting $(1)"; \
@@ -26,6 +28,7 @@ define substitute_config_to_from
 		cp -r $(2) $(1); \
 	fi
 endef
+
 
 define install_config_to_from
   @if [ -e $(1) ]; then \
@@ -53,7 +56,6 @@ help:
 	@echo 'make foo_substitute:  Substitute only a specific dotifile e.g. "bash_substitute"'
 	@echo 'make foo_copy:        Copy only a specific dotifile e.g. "bash_copy"'
 	@echo 'make list:            List available dotfiles in this repository'
-	@echo 'make uninstall:       Restore configuration from backups created in "install" operations'
 
 
 list:
@@ -68,18 +70,19 @@ substitute: bash_substitute zsh_substitute tmux_substitute vim_substitute
 copy: bash_copy zsh_copy tmux_copy vim_copy
 uninstall: restore_install
 
+
 bash_install:
-	$(call install_config_to_from, "${HOME}/.bashrc", "bashrc/dot-bashrc")
+	$(call install_config_to_from, "${HOME}/.bashrc", "$(CURDIR)/bashrc/dot-bashrc")
 	
 zshrc_install:
-	$(call install_config_to_from, "${HOME}/.zshrc", "bashrc/dot-bashrc")
+	$(call install_config_to_from, "${HOME}/.zshrc", "$(CURDIR)/zshrc/dot-zshrc")
 
 tmux_install:
-	$(call install_config_to_from, "${HOME}/.tmux.conf", "tmux/dot-tmux.conf")
+	$(call install_config_to_from, "${HOME}/.tmux.conf", "$(CURDIR)/tmux/dot-tmux.conf")
 
 vim_install:
-	$(call install_config_to_from, "${HOME}/.vim", "vim/dot-vim")
-	$(call install_config_to_from, "${HOME}/.vimrc", "vim/dot-vimrc")
+	$(call install_config_to_from, "${HOME}/.vim", "$(CURDIR)/vim/dot-vim")
+	$(call install_config_to_from, "${HOME}/.vimrc", "$(CURDIR)/vim/dot-vimrc")
 
 
 bash_substitute:
@@ -121,6 +124,7 @@ restore_install:
 	@test -e "${HOME}/.vimrc.bak" && mv "${HOME}/.vimrc.bak" "${HOME}/.vimrc"
 	@test -L "${HOME}/.vim" && rm "${HOME}/.vim"
 	@test -d "${HOME}/.vim.bak" && mv "${HOME}/.vim.bak" "${HOME}/.vim"
+
 
 .PHONY: default help list install substitute copy uninstall \
 				bash_install zshrc_install tmux_install vim_install \

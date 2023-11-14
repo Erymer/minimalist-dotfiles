@@ -39,7 +39,6 @@ alias cp="command cp --interactive"  # Confirm before overwriting something
 alias df='command df --human-readable'
 alias du='command du -h'
 alias du1='command du --human-readable --max-depth=1 --all | sort -hr 2> /dev/null | less'
-alias rm='command rm -I'  # Prevents epic mistakes
 alias free='command free -m'  # Show sizes in MB
 alias l='command ls'
 alias ls='command ls --color=always'
