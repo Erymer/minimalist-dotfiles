@@ -68,7 +68,7 @@ make list
 
 ## GNU Stow
 
-You can use [GNU Stow](https://www.gnu.org/software/stow/) does it using the
+You can use [GNU Stow](https://www.gnu.org/software/stow/) using the
 `--dotfiles` flag, however, if there's already a configuration file in the
 system of any the tools and/or shells used here you will need to delete or
 create a backup of this files manually.
